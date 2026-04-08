@@ -5,33 +5,23 @@
 # LICENSE file in the root directory of this source tree.
 
 # Multi-stage build using openenv-base
-# This Dockerfile is flexible and works for both:
-# - In-repo environments (with local OpenEnv sources)
-# - Standalone environments (with openenv from PyPI/Git)
-# The build script (openenv build) handles context detection and sets appropriate build args.
-
 ARG BASE_IMAGE=ghcr.io/meta-pytorch/openenv-base:latest
 FROM ${BASE_IMAGE} AS builder
 
 WORKDIR /app
 
-# Ensure git is available (required for installing dependencies from VCS)
+# Ensure git is available
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git && \
     rm -rf /var/lib/apt/lists/*
 
-# Build argument to control whether we're building standalone or in-repo
-ARG BUILD_MODE=in-repo
-ARG ENV_NAME=email_triage_env
+# Copy environment code from the email_triage_env directory
+# We copy the subdir content to /app/env inside the container
+COPY email_triage_env /app/env
 
-# Copy environment code (always at root of build context)
-COPY . /app/env
-
-# For in-repo builds, openenv is already vendored in the build context
-# For standalone builds, openenv will be installed via pyproject.toml
 WORKDIR /app/env
 
-# Ensure uv is available (for local builds where base image lacks it)
+# Ensure uv is available
 RUN if ! command -v uv >/dev/null 2>&1; then \
         curl -LsSf https://astral.sh/uv/install.sh | sh && \
         mv /root/.local/bin/uv /usr/local/bin/uv && \
@@ -39,7 +29,6 @@ RUN if ! command -v uv >/dev/null 2>&1; then \
     fi
     
 # Install dependencies using uv sync
-# If uv.lock exists, use it; otherwise resolve on the fly
 RUN --mount=type=cache,target=/root/.cache/uv \
     if [ -f uv.lock ]; then \
         uv sync --frozen --no-install-project --no-editable; \
@@ -81,5 +70,5 @@ EXPOSE 7860
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')" || exit 1
 
-# Run the FastAPI server on port 7860 for HF Spaces compatibility
+# Run the FastAPI server on port 7860 for compatibility
 CMD ["sh", "-c", "cd /app/env && uvicorn server.app:app --host 0.0.0.0 --port 7860"]
