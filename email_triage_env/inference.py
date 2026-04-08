@@ -325,51 +325,36 @@ async def run_task(client_openai: OpenAI, env: EmailTriageEnv, task_name: str) -
 
 async def main() -> None:
     """Run all tasks sequentially."""
-    if not API_KEY:
-        print("[ERROR] HF_TOKEN environment variable is not set. Cannot proceed.", flush=True)
-        # Still emit [START]/[END] for each task so the validator gets valid output
-        for task_name in TASKS:
-            log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME)
-            log_end(success=False, steps=0, score=0.01, rewards=[])
-        return
+    print(f"[DEBUG] API_BASE_URL={API_BASE_URL}", flush=True)
+    print(f"[DEBUG] MODEL_NAME={MODEL_NAME}", flush=True)
+    print(f"[DEBUG] API_KEY={'set' if API_KEY else 'NOT SET'}", flush=True)
+    print(f"[DEBUG] IMAGE_NAME={IMAGE_NAME}", flush=True)
 
-    client_openai = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    client_openai = OpenAI(base_url=API_BASE_URL, api_key=API_KEY or "dummy")
 
     all_scores = {}
 
     for task_name in TASKS:
-        env = None
-        try:
-            if IMAGE_NAME:
-                env = await EmailTriageEnv.from_docker_image(IMAGE_NAME)
-            else:
-                # Default: connect to running server
-                base_url = os.getenv("EMAIL_TRIAGE_BASE_URL", "http://localhost:8000")
-                env = EmailTriageEnv(base_url=base_url)
+        if IMAGE_NAME:
+            print(f"[DEBUG] Using from_docker_image({IMAGE_NAME})", flush=True)
+            env = await EmailTriageEnv.from_docker_image(IMAGE_NAME)
+        else:
+            base_url = os.getenv("EMAIL_TRIAGE_BASE_URL", "http://localhost:8000")
+            print(f"[DEBUG] Connecting to {base_url}", flush=True)
+            env = EmailTriageEnv(base_url=base_url)
 
+        try:
             score = await run_task(client_openai, env, task_name)
             all_scores[task_name] = score
-        except Exception as e:
-            print(f"[ERROR] Task {task_name} failed with: {e}", flush=True)
-            # Emit valid [START]/[END] logs so the validator doesn't break
-            if task_name not in all_scores:
-                log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME)
-                log_end(success=False, steps=0, score=0.01, rewards=[])
-            all_scores[task_name] = 0.01
         finally:
-            if env is not None:
-                try:
-                    await env.close()
-                except Exception as e:
-                    print(f"[DEBUG] env.close() error: {e}", flush=True)
+            try:
+                await env.close()
+            except Exception:
+                pass
 
     print(f"\n[SUMMARY] Scores: {json.dumps(all_scores, indent=2)}", flush=True)
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        print(f"[FATAL] Unhandled exception: {e}", flush=True)
-        import sys
-        sys.exit(1)
+    asyncio.run(main())
+
