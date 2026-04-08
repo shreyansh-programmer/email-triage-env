@@ -26,12 +26,13 @@ from openai import OpenAI
 from email_triage_env import EmailTriageAction, EmailTriageEnv
 
 # ─── Configuration ──────────────────────────────────────────────
+# Use os.environ[] as required by the hackathon validator
 
-IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME") or os.getenv("IMAGE_NAME")
-API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")  # API_KEY from validator takes priority
-API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
-MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
-BENCHMARK = os.getenv("EMAIL_TRIAGE_BENCHMARK", "email_triage_env")
+IMAGE_NAME = os.environ.get("LOCAL_IMAGE_NAME") or os.environ.get("IMAGE_NAME")
+API_KEY = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN", "")
+API_BASE_URL = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+BENCHMARK = os.environ.get("EMAIL_TRIAGE_BENCHMARK", "email_triage_env")
 
 TASKS = ["priority_classification", "route_and_classify", "full_triage"]
 MAX_STEPS_MAP = {
@@ -182,52 +183,47 @@ def get_model_action(
     """Query the LLM for the next action."""
     user_prompt = build_user_prompt(obs_dict, step, history)
 
+    # Make the LLM call — do NOT catch connection/auth errors,
+    # the validator needs to see these calls go through its proxy.
+    completion = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPTS[task_name]},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=TEMPERATURE,
+        max_tokens=MAX_TOKENS,
+        stream=False,
+    )
+    text = (completion.choices[0].message.content or "").strip()
+
+    # Extract JSON from response (handle markdown code blocks)
+    if "```" in text:
+        lines = text.split("\n")
+        json_lines = []
+        in_block = False
+        for line in lines:
+            if line.strip().startswith("```"):
+                in_block = not in_block
+                continue
+            if in_block:
+                json_lines.append(line)
+        text = "\n".join(json_lines).strip()
+
+    # Try to parse JSON, fallback to keyword extraction
     try:
-        completion = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPTS[task_name]},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=TEMPERATURE,
-            max_tokens=MAX_TOKENS,
-            stream=False,
-        )
-        text = (completion.choices[0].message.content or "").strip()
-
-        # Extract JSON from response (handle markdown code blocks)
-        if "```" in text:
-            # Extract content between code blocks
-            lines = text.split("\n")
-            json_lines = []
-            in_block = False
-            for line in lines:
-                if line.strip().startswith("```"):
-                    in_block = not in_block
-                    continue
-                if in_block:
-                    json_lines.append(line)
-            text = "\n".join(json_lines).strip()
-
-        # Try to parse JSON
         action = json.loads(text)
         return action
-
     except json.JSONDecodeError:
-        # Fallback: try to extract action type from text
         text_lower = text.lower() if text else ""
-        if "read" in text_lower:
-            return {"action_type": "read"}
-        elif "finish" in text_lower:
+        if "finish" in text_lower:
             return {"action_type": "finish"}
         elif "skip" in text_lower:
             return {"action_type": "skip"}
+        elif "classify" in text_lower:
+            return {"action_type": "read"}
         else:
             return {"action_type": "read"}
-
-    except Exception as exc:
-        print(f"[DEBUG] Model request failed: {exc}", flush=True)
-        return {"action_type": "read"}
 
 
 def obs_to_dict(obs) -> Dict:
@@ -316,6 +312,7 @@ async def run_task(client_openai: OpenAI, env: EmailTriageEnv, task_name: str) -
         print(f"[DEBUG] Task {task_name} error: {e}", flush=True)
         score = 0.01
         success = False
+        raise  # Let it propagate so the validator sees the real error
 
     finally:
         log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
