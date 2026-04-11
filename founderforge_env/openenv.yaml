@@ -1,0 +1,14 @@
+name: FounderForge
+version: "0.1.0"
+description: "OpenEnv benchmark simulating a Startup CEO"
+docker_image: "openenv-founderforge:latest"
+server:
+  host: "0.0.0.0"
+  port: 8000
+tasks:
+  - name: bootstrap_survival
+    description: "Survive 12 months with 250k."
+  - name: growth_stage
+    description: "Grow to Series A."
+  - name: unicorn_ipo
+    description: "Launch IPO."
