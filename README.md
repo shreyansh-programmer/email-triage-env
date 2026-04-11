@@ -91,7 +91,6 @@ class FounderForgeObservation(Observation):
 
 ### Run Tests
 ```bash
-cd founderforge_env
 pip install -e ".[dev]"
 pytest tests/ -v
 ```
@@ -110,26 +109,48 @@ docker run -p 7860:7860 founderforge
 
 ---
 
-## 📁 Project Structure
+## 🏗️ Execution Architecture
+
+```mermaid
+graph TD
+    A[OpenEnv Evaluator \n or Web UI] -->|action / reset| B[FastAPI Server <br/> server/app.py]
+    B --> C[FounderForgeEnvironment \n founderforge_env/server/environment.py]
+    C -->|Tool Call| D{Tools Exec}
+    D -->|hire_personnel| E[Team State \n + Burn Rate]
+    D -->|pivot_strategy| F[Strategy State]
+    D -->|launch_marketing| G[User Traction <br/> business.py]
+    D -->|attempt_fundraise| H[Cash Infusion]
+    
+    C -->|Phase 2| I[Calculate Runways \n & Burn Rates]
+    I -->|Phase 3| J[Generate Semantic <br/> Market Events]
+    J --> K((Return Observation <br/> to Agent))
 ```
-├── Dockerfile                    # OpenEnv-compatible multi-stage build
-├── inference.py                  # Baseline agent with tool-calling
+
+---
+
+## 📁 Project Structure (OpenEnv Validation Compliant)
+```
+├── server/
+│   ├── __init__.py
+│   └── app.py            # FastAPI HTTP wrapper + web UI
 ├── founderforge_env/
-│   ├── openenv.yaml              # Benchmark manifest with 3 tasks + graders
-│   ├── pyproject.toml            # Package configuration
-│   ├── founderforge_env/
-│   │   ├── models.py             # Typed Action & Observation schemas
-│   │   ├── business.py           # Financial simulation engine
-│   │   ├── evaluation.py         # Programmatic graders (3 tasks)
-│   │   ├── static/
-│   │   │   └── index.html        # Interactive web dashboard
-│   │   └── server/
-│   │       ├── environment.py    # Core environment (reset/step/state)
-│   │       └── app.py            # FastAPI HTTP wrapper + web UI
-│   └── tests/
-│       ├── test_business_logic.py
-│       ├── test_environment_actions.py
-│       └── test_evaluation.py
+│   ├── __init__.py
+│   ├── models.py             # Typed Action & Observation schemas
+│   ├── business.py           # Financial simulation engine
+│   ├── evaluation.py         # Programmatic graders (3 tasks)
+│   ├── static/
+│   │   └── index.html        # Interactive web dashboard
+│   └── server/
+│       └── environment.py    # Core environment (reset/step/state)
+├── tests/
+│   ├── test_business_logic.py
+│   ├── test_environment_actions.py
+│   └── test_evaluation.py
+├── openenv.yaml              # Benchmark manifest with 3 tasks + graders
+├── pyproject.toml            # Package configuration
+├── uv.lock                   # Lockfile for reproducible builds
+├── Dockerfile                # OpenEnv-compatible multi-stage build
+└── inference.py              # Baseline agent with tool-calling
 ```
 
 ---
