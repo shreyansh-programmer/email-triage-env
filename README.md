@@ -1,3 +1,13 @@
+---
+title: FounderForge CEO Simulator
+emoji: 🏢
+colorFrom: green
+colorTo: blue
+sdk: docker
+pinned: false
+license: bsd-3-clause
+---
+
 # 🏢 FounderForge — Startup CEO Simulator
 
 > **An OpenEnv benchmark that evaluates LLM agents on real-world startup management: financial planning, team building, market adaptation, and fundraising — all through native tool calling.**
@@ -111,9 +121,11 @@ docker run -p 7860:7860 founderforge
 │   │   ├── models.py             # Typed Action & Observation schemas
 │   │   ├── business.py           # Financial simulation engine
 │   │   ├── evaluation.py         # Programmatic graders (3 tasks)
+│   │   ├── static/
+│   │   │   └── index.html        # Interactive web dashboard
 │   │   └── server/
 │   │       ├── environment.py    # Core environment (reset/step/state)
-│   │       └── app.py            # FastAPI HTTP wrapper
+│   │       └── app.py            # FastAPI HTTP wrapper + web UI
 │   └── tests/
 │       ├── test_business_logic.py
 │       ├── test_environment_actions.py
@@ -129,3 +141,4 @@ docker run -p 7860:7860 founderforge
 3. **Dense Reward Signal**: Every step provides meaningful feedback, not just a binary win/lose at the end.
 4. **Real Difficulty Progression**: Easy mode is pure math. Hard mode requires reading comprehension, crisis management, and long-horizon planning.
 5. **Deterministic Grading**: Seeded RNG ensures reproducible episodes for fair evaluation.
+6. **Interactive Web Dashboard**: Human reviewers can play the simulator directly in-browser.
