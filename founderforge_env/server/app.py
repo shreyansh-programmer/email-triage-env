@@ -23,7 +23,7 @@ _web_env = FounderForgeEnvironment()
 
 @app.get("/")
 async def serve_web_ui():
-    static_dir = Path(__file__).parent / "founderforge_env" / "static"
+    static_dir = Path(__file__).parent.parent / "founderforge_env" / "static"
     index_path = static_dir / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path), media_type="text/html")
