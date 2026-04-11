@@ -6,7 +6,7 @@ def test_environment_initialization():
     env = FounderForgeEnvironment()
     obs = env.reset()
     assert obs.cash == 250000.0
-    assert len(obs.tools_list) == 3
+    assert len(obs.tools_list) == 5
 
 def test_environment_hire_action():
     env = FounderForgeEnvironment()
