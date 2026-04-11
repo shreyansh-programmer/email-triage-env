@@ -10,10 +10,12 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from openenv.core.env_server import create_fastapi_app
 from founderforge_env.server.environment import FounderForgeEnvironment
-from founderforge_env.models import FounderForgeAction
+from founderforge_env.models import FounderForgeAction, FounderForgeObservation
 
 app = create_fastapi_app(
-    environment_cls=FounderForgeEnvironment,
+    env=FounderForgeEnvironment,
+    action_cls=FounderForgeAction,
+    observation_cls=FounderForgeObservation,
 )
 
 _web_env = FounderForgeEnvironment()

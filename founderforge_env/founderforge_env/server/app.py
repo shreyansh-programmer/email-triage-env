@@ -12,11 +12,13 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from openenv.core.env_server import create_fastapi_app
 from .environment import FounderForgeEnvironment
-from ..models import FounderForgeAction
+from ..models import FounderForgeAction, FounderForgeObservation
 
 # Create the base OpenEnv app with standard endpoints
 app = create_fastapi_app(
-    environment_cls=FounderForgeEnvironment,
+    env=FounderForgeEnvironment,
+    action_cls=FounderForgeAction,
+    observation_cls=FounderForgeObservation,
 )
 
 # ── Persistent environment instance for the web UI ───────────────────────
