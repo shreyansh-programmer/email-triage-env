@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FounderForge — CEO Simulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 24px 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #6dff6d, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .badge {
+            background: rgba(78, 205, 196, 0.15);
+            color: #4ecdc4;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: #12121a;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .card:hover { border-color: rgba(78, 205, 196, 0.3); }
+
+        .card h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #6b6b80;
+            margin-bottom: 16px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .metric:last-child { border-bottom: none; }
+
+        .metric-label { color: #9090a8; font-size: 14px; }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-value.cash { color: #6dff6d; }
+        .metric-value.users { color: #4ecdc4; }
+        .metric-value.danger { color: #ff6b6b; }
+        .metric-value.neutral { color: #e0e0e6; }
+
+        .event-box {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #1a1025, #12121a);
+            border-color: rgba(160, 100, 255, 0.2);
+        }
+
+        .event-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #c8c8d8;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border-left: 3px solid #a064ff;
+        }
+
+        .tools-grid {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .tool-btn {
+            background: #1a1a2e;
+            border: 1px solid rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            padding: 14px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: rgba(78, 205, 196, 0.1);
+            border-color: #4ecdc4;
+            transform: translateY(-2px);
+        }
+
+        .tool-btn:active { transform: translateY(0); }
+
+        .tool-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .log-area {
+            grid-column: 1 / -1;
+        }
+
+        .log-area pre {
+            background: #08080d;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 12px;
+            color: #80809a;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.7;
+        }
+
+        .log-area pre .log-step { color: #4ecdc4; }
+        .log-area pre .log-reward { color: #6dff6d; }
+        .log-area pre .log-error { color: #ff6b6b; }
+
+        .task-selector {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .task-selector select {
+            background: #1a1a2e;
+            color: #e0e0e6;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #4ecdc4, #44b09e);
+            color: #000;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-reset:hover { opacity: 0.85; }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #6dff6d);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        .status-done {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .tools-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏢 FounderForge</h1>
+        <span class="badge">CEO Simulator v0.1</span>
+        <span class="badge">OpenEnv Benchmark</span>
+    </div>
+
+    <div class="container">
+        <!-- Task Selector -->
+        <div class="card task-selector">
+            <select id="taskSelect">
+                <option value="bootstrap_survival">🟢 Bootstrap Survival (Easy)</option>
+                <option value="growth_stage">🟡 Growth Stage (Medium)</option>
+                <option value="unicorn_ipo">🔴 Unicorn → IPO (Hard)</option>
+            </select>
+            <button class="btn-reset" onclick="resetEnv()">🚀 Start New Game</button>
+        </div>
+
+        <!-- Financials -->
+        <div class="card">
+            <h2>💰 Financials</h2>
+            <div class="metric">
+                <span class="metric-label">Cash Balance</span>
+                <span class="metric-value cash" id="cash">$0</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Funding Round</span>
+                <span class="metric-value neutral" id="round">Pre-Seed</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Strategy</span>
+                <span class="metric-value neutral" id="strategy">product_led</span>
+            </div>
+        </div>
+
+        <!-- Growth -->
+        <div class="card">
+            <h2>📈 Growth</h2>
+            <div class="metric">
+                <span class="metric-label">Total Users</span>
+                <span class="metric-value users" id="users">0</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Product Quality</span>
+                <span class="metric-value neutral" id="quality">1.0</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Team</span>
+                <span class="metric-value neutral" id="team">0 eng / 0 sales</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Month / Max</span>
+                <span class="metric-value neutral" id="month">0 / 12</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+        </div>
+
+        <!-- Market Event -->
+        <div class="card event-box">
+            <h2>📰 Market Intelligence</h2>
+            <div class="event-text" id="eventText">Press "Start New Game" to begin your journey as CEO.</div>
+        </div>
+
+        <!-- Tool Buttons -->
+        <div class="tools-grid">
+            <button class="tool-btn" id="btnHireEng" onclick="doAction('hire_personnel',{role:'engineer'})">👩‍💻 Hire<br>Engineer</button>
+            <button class="tool-btn" id="btnHireSales" onclick="doAction('hire_personnel',{role:'sales'})">🤝 Hire<br>Sales</button>
+            <button class="tool-btn" id="btnMarketing" onclick="doMarketing()">📣 Launch<br>Campaign</button>
+            <button class="tool-btn" id="btnFundraise" onclick="doFundraise()">💸 Attempt<br>Fundraise</button>
+            <button class="tool-btn" id="btnPivot" onclick="doPivot()">🔄 Pivot<br>Strategy</button>
+        </div>
+
+        <!-- Extra tools row -->
+        <div class="tools-grid" style="grid-template-columns: repeat(3,1fr);">
+            <button class="tool-btn" onclick="doAction('layoff_staff',{role:'engineer'})" style="border-color:rgba(255,107,107,0.2);color:#ff6b6b;">🔻 Layoff Engineer</button>
+            <button class="tool-btn" onclick="doAction('layoff_staff',{role:'sales'})" style="border-color:rgba(255,107,107,0.2);color:#ff6b6b;">🔻 Layoff Sales</button>
+            <button class="tool-btn" onclick="doAction('skip',{})" style="border-color:rgba(255,255,255,0.1);color:#6b6b80;">⏭ Skip Month</button>
+        </div>
+
+        <!-- Log -->
+        <div class="card log-area">
+            <h2>📋 Action Log</h2>
+            <pre id="logPre">Waiting for game start...</pre>
+        </div>
+    </div>
+
+    <script>
+        let gameState = null;
+        let stepCount = 0;
+        let maxSteps = 12;
+        let isDone = false;
+
+        function fmt(n) { return Number(n).toLocaleString('en-US', {maximumFractionDigits:0}); }
+
+        function updateUI(obs) {
+            gameState = obs;
+            isDone = obs.done;
+            stepCount = obs.metadata?.step || 0;
+            maxSteps = parseInt(document.getElementById('taskSelect').value === 'bootstrap_survival' ? 12 :
+                       document.getElementById('taskSelect').value === 'growth_stage' ? 24 : 36);
+
+            document.getElementById('cash').textContent = '$' + fmt(obs.cash);
+            document.getElementById('cash').className = 'metric-value ' + (obs.cash < 50000 ? 'danger' : 'cash');
+            document.getElementById('users').textContent = fmt(obs.users);
+            document.getElementById('quality').textContent = obs.product_quality.toFixed(1);
+            document.getElementById('round').textContent = obs.current_round;
+            document.getElementById('strategy').textContent = obs.strategy;
+            document.getElementById('team').textContent = `${obs.team.engineers} eng / ${obs.team.sales} sales`;
+            document.getElementById('month').textContent = `${stepCount} / ${maxSteps}`;
+
+            let pct = Math.min((obs.users / (document.getElementById('taskSelect').value === 'bootstrap_survival' ? 5000 :
+                       document.getElementById('taskSelect').value === 'growth_stage' ? 50000 : 1000000)) * 100, 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+
+            let eventParts = obs.last_action_result.split('\n');
+            let marketLine = eventParts.find(l => l.includes('[MARKET')) || 'No update.';
+            document.getElementById('eventText').textContent = marketLine.replace('[MARKET UPDATE] ', '');
+
+            if (obs.done) {
+                appendLog(`🏁 GAME OVER — Score: ${obs.reward.toFixed(3)} | Users: ${fmt(obs.users)} | Cash: $${fmt(obs.cash)}`);
+                disableButtons(true);
+            }
+        }
+
+        function appendLog(text) {
+            let pre = document.getElementById('logPre');
+            let ts = `[Month ${stepCount}]`;
+            pre.textContent += '\n' + ts + ' ' + text;
+            pre.scrollTop = pre.scrollHeight;
+        }
+
+        function disableButtons(disabled) {
+            document.querySelectorAll('.tool-btn').forEach(b => b.disabled = disabled);
+        }
+
+        async function resetEnv() {
+            let task = document.getElementById('taskSelect').value;
+            disableButtons(true);
+            document.getElementById('logPre').textContent = `Starting ${task}...`;
+
+            try {
+                let res = await fetch('/reset', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({task_name: task})
+                });
+                let data = await res.json();
+                updateUI(data);
+                disableButtons(false);
+                appendLog('🚀 Game started! Make your first decision.');
+            } catch(e) {
+                appendLog('❌ Error: ' + e.message);
+            }
+        }
+
+        async function doAction(toolName, args) {
+            if (isDone) return;
+            disableButtons(true);
+            try {
+                let body = {action_type: 'ToolCallAction', tool_name: toolName, arguments: args};
+                if (toolName === 'skip') body = {action_type: 'skip'};
+
+                let res = await fetch('/step', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(body)
+                });
+                let data = await res.json();
+                updateUI(data);
+                if (!isDone) disableButtons(false);
+
+                let result = data.tool_result || data.last_action_result.split('\n').pop();
+                appendLog(`${toolName}: ${result}`);
+            } catch(e) {
+                appendLog('❌ ' + e.message);
+                disableButtons(false);
+            }
+        }
+
+        function doMarketing() {
+            let amount = prompt('Marketing spend ($):', '20000');
+            if (amount) doAction('launch_marketing_campaign', {spend_amount: parseFloat(amount)});
+        }
+
+        function doFundraise() {
+            let round = prompt('Round name (Pre-Seed, Seed, Series A, Series B, IPO):', 'Pre-Seed');
+            if (round) doAction('attempt_fundraise', {round_name: round});
+        }
+
+        function doPivot() {
+            let focus = prompt('Strategy (product_led, sales_led, survival_mode):', 'product_led');
+            if (focus) doAction('pivot_strategy', {focus: focus});
+        }
+    </script>
+</body>
+</html>
