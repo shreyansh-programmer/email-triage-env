@@ -1,23 +1,21 @@
 """FounderForge — FastAPI HTTP Server with Web Interface.
 
-This module wraps the FounderForgeEnvironment with:
-1. The standard OpenEnv HTTP interface (/reset, /step, /state, /health)
-2. A premium interactive web dashboard at the root (/)
+Wraps the FounderForgeEnvironment with the standard OpenEnv HTTP interface
+(/reset, /step, /state, /health) plus an interactive web dashboard at /.
 """
 
 import os
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
-from openenv.core.env_server.app import create_app
+from openenv.core.env_server import create_fastapi_app
 from .environment import FounderForgeEnvironment
 from ..models import FounderForgeAction
 
-# Create the base OpenEnv app
-app = create_app(
+# Create the base OpenEnv app with standard endpoints
+app = create_fastapi_app(
     environment_cls=FounderForgeEnvironment,
 )
 
@@ -32,7 +30,7 @@ async def serve_web_ui():
     index_path = static_dir / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path), media_type="text/html")
-    return JSONResponse({"error": "Web UI not found"}, status_code=404)
+    return JSONResponse({"status": "FounderForge API running", "endpoints": ["/reset", "/step", "/health"]})
 
 
 @app.post("/reset")
@@ -56,7 +54,6 @@ async def web_step(body: dict = {}):
 
 
 def _obs_to_dict(obs) -> dict:
-    """Convert observation to a JSON-serializable dict."""
     return {
         "done": obs.done,
         "reward": obs.reward,
@@ -77,12 +74,7 @@ def _obs_to_dict(obs) -> dict:
 
 def main():
     import uvicorn
-    uvicorn.run(
-        "founderforge_env.server.app:app",
-        host="0.0.0.0",
-        port=7860,
-        reload=False,
-    )
+    uvicorn.run("founderforge_env.server.app:app", host="0.0.0.0", port=7860, reload=False)
 
 
 if __name__ == "__main__":

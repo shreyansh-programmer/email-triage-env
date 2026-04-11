@@ -1,20 +1,18 @@
 """FounderForge — Top-level FastAPI Server (Docker entrypoint).
 
 The Dockerfile CMD runs: cd /app/env && uvicorn server.app:app
-This module bridges from the Docker context into the package server.
 """
 
-import os
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 
-from openenv.core.env_server.app import create_app
+from openenv.core.env_server import create_fastapi_app
 from founderforge_env.server.environment import FounderForgeEnvironment
 from founderforge_env.models import FounderForgeAction
 
-app = create_app(
+app = create_fastapi_app(
     environment_cls=FounderForgeEnvironment,
 )
 
@@ -27,7 +25,7 @@ async def serve_web_ui():
     index_path = static_dir / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path), media_type="text/html")
-    return JSONResponse({"status": "FounderForge API is running", "endpoints": ["/reset", "/step", "/state", "/health"]})
+    return JSONResponse({"status": "FounderForge API running", "endpoints": ["/reset", "/step", "/health"]})
 
 
 @app.post("/reset")
