@@ -371,6 +371,7 @@
                 // OpenEnv responds with {"observation": {...}}
                 let obs = data.observation;
                 
+                document.getElementById('companyName').textContent = '🏢 ' + (obs.company_name || 'FounderForge');
                 updateUI(obs);
                 disableButtons(false);
                 appendLog('🚀 Game started! Make your first decision.');

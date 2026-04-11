@@ -45,6 +45,7 @@ class FounderForgeObservation(Observation):
     current_round: str
     strategy: str
     last_action_result: str
+    company_name: str
     task_name: str
     task_description: str
     tools_list: List[Dict[str, Any]]

@@ -281,8 +281,13 @@ class FounderForgeEnvironment(Environment):
         self._dense_reward_buffer = 0.0
         self._done = False
         self._last_tool_result = None
+
+        prefix = ["Neuro", "Quantum", "Apex", "Syntax", "Data", "Poly", "Cyber", "Aero", "Omni"]
+        suffix = ["Forge", "Scale", "AI", "Dynamics", "Systems", "Shift", "Cloud", "Labs"]
+        self._company_name = self._rng.choice(prefix) + self._rng.choice(suffix)
+
         self._last_result = (
-            f"Welcome to FounderForge — Task: {self._task_name}. "
+            f"Welcome to {self._company_name} — Task: {self._task_name}. "
             f"You have ${self._cash:,.0f} and {self._max_steps} months. "
             f"Target: {self._target_users:,} users. Read Market Reports carefully!"
         )
@@ -485,6 +490,7 @@ class FounderForgeEnvironment(Environment):
             current_round=self._current_round,
             strategy=self._strategy,
             last_action_result=f"{market_report}\n{self._last_result}",
+            company_name=getattr(self, "_company_name", "FounderForge"),
             task_name=self._task_name,
             task_description=self.TASK_CONFIG[self._task_name]["description"],
             tools_list=self.TOOLS,
