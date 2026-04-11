@@ -33,9 +33,9 @@ from openai import OpenAI
 # Add the local directory to sys.path so we can import founderforge_env
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from founderforge_env.founderforge_env.server.environment import FounderForgeEnvironment
-from founderforge_env.founderforge_env.models import FounderForgeAction
-from founderforge_env.founderforge_env.evaluation import GRADERS
+from founderforge_env.server.environment import FounderForgeEnvironment
+from founderforge_env.models import FounderForgeAction
+from founderforge_env.evaluation import GRADERS
 
 # ── Mandatory Environment Variables ──────────────────────────────────────
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
