@@ -35,43 +35,6 @@ async def serve_web_ui():
     return JSONResponse({"status": "FounderForge API running", "endpoints": ["/reset", "/step", "/health"]})
 
 
-@app.post("/reset")
-async def web_reset(body: dict = {}):
-    """Reset the environment for interactive play."""
-    task_name = body.get("task_name", "bootstrap_survival")
-    obs = _web_env.reset(task_name=task_name)
-    return _obs_to_dict(obs)
-
-
-@app.post("/step")
-async def web_step(body: dict = {}):
-    """Execute one step for interactive play."""
-    action = FounderForgeAction(
-        action_type=body.get("action_type", "skip"),
-        tool_name=body.get("tool_name"),
-        arguments=body.get("arguments"),
-    )
-    obs = _web_env.step(action)
-    return _obs_to_dict(obs)
-
-
-def _obs_to_dict(obs) -> dict:
-    return {
-        "done": obs.done,
-        "reward": obs.reward,
-        "cash": obs.cash,
-        "users": obs.users,
-        "product_quality": obs.product_quality,
-        "team": obs.team,
-        "current_round": obs.current_round,
-        "strategy": obs.strategy,
-        "last_action_result": obs.last_action_result,
-        "task_name": obs.task_name,
-        "task_description": obs.task_description,
-        "tools_list": obs.tools_list,
-        "tool_result": obs.tool_result,
-        "metadata": obs.metadata,
-    }
 
 
 def main():

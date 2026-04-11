@@ -406,8 +406,13 @@ class FounderForgeEnvironment(Environment):
                 self._last_tool_result = f"Invalid focus '{focus}'."
 
         elif tool_name == "launch_marketing_campaign":
-            raw_spend = float(args.get("spend_amount", 0.0))
-            marketing_spend = min(raw_spend, self._cash)  # can't spend more than you have
+            try:
+                raw_spend = float(args.get("spend_amount", 0.0))
+            except (ValueError, TypeError):
+                raw_spend = 0.0
+                self._last_tool_result = f"Invalid spend_amount received. Defaulting to 0."
+                
+            marketing_spend = min(max(raw_spend, 0.0), self._cash)  # can't spend more than you have, or negative
 
             # Strategy and event modifiers
             modifier = 1.0

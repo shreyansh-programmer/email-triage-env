@@ -178,7 +178,7 @@ def run_task(client: OpenAI, task_name: str, env: FounderForgeEnvironment) -> No
 
             # Format action string for log
             if action.tool_name:
-                action_str = f"{action.tool_name}({json.dumps(action.arguments)})"
+                action_str = f"{action.tool_name}({json.dumps(action.arguments, separators=(',', ':'))})"
             else:
                 action_str = action.action_type
 
