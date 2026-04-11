@@ -1,14 +1,38 @@
-name: FounderForge
+name: founderforge_env
 version: "0.1.0"
-description: "OpenEnv benchmark simulating a Startup CEO"
+description: >
+  FounderForge — A Startup CEO Simulator for evaluating LLM decision-making
+  under financial pressure, market volatility, and strategic trade-offs.
+  Agents must read unstructured market reports and execute tool calls to
+  hire staff, pivot strategy, launch campaigns, and raise funding rounds.
+
 docker_image: "openenv-founderforge:latest"
+
 server:
   host: "0.0.0.0"
-  port: 8000
+  port: 7860
+  module: "server.app:app"
+
+environment:
+  class: "founderforge_env.server.environment:FounderForgeEnvironment"
+  action_model: "founderforge_env.models:FounderForgeAction"
+  observation_model: "founderforge_env.models:FounderForgeObservation"
+
 tasks:
   - name: bootstrap_survival
-    description: "Survive 12 months with 250k."
+    description: "Easy — Survive 12 months on $250k and reach 5,000 users. No market events."
+    grader: "founderforge_env.evaluation:grade_bootstrap_survival"
+    difficulty: easy
+    max_steps: 12
+
   - name: growth_stage
-    description: "Grow to Series A."
+    description: "Medium — Scale to 50,000 users in 24 months while navigating market disruptions."
+    grader: "founderforge_env.evaluation:grade_growth_stage"
+    difficulty: medium
+    max_steps: 24
+
   - name: unicorn_ipo
-    description: "Launch IPO."
+    description: "Hard — Reach 1M users and IPO in 36 months surviving black-swan crises."
+    grader: "founderforge_env.evaluation:grade_unicorn_ipo"
+    difficulty: hard
+    max_steps: 36

@@ -15,9 +15,8 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends git && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy environment code from the email_triage_env directory
-# We copy the subdir content to /app/env inside the container
-COPY email_triage_env /app/env
+# Copy environment code from the founderforge_env directory
+COPY founderforge_env /app/env
 
 WORKDIR /app/env
 
