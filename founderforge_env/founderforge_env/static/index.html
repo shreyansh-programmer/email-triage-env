@@ -367,7 +367,11 @@
                     body: JSON.stringify({task_name: task})
                 });
                 let data = await res.json();
-                updateUI(data);
+                
+                // OpenEnv responds with {"observation": {...}}
+                let obs = data.observation;
+                
+                updateUI(obs);
                 disableButtons(false);
                 appendLog('🚀 Game started! Make your first decision.');
             } catch(e) {
@@ -379,8 +383,11 @@
             if (isDone) return;
             disableButtons(true);
             try {
-                let body = {action_type: 'ToolCallAction', tool_name: toolName, arguments: args};
-                if (toolName === 'skip') body = {action_type: 'skip'};
+                let actionObj = {action_type: 'ToolCallAction', tool_name: toolName, arguments: args};
+                if (toolName === 'skip') actionObj = {action_type: 'skip'};
+                
+                // OpenEnv step requires {"action": {...}}
+                let body = {action: actionObj};
 
                 let res = await fetch('/step', {
                     method: 'POST',
@@ -388,10 +395,13 @@
                     body: JSON.stringify(body)
                 });
                 let data = await res.json();
-                updateUI(data);
+                
+                let obs = data.observation;
+                
+                updateUI(obs);
                 if (!isDone) disableButtons(false);
 
-                let result = data.tool_result || data.last_action_result.split('\n').pop();
+                let result = obs.tool_result || obs.last_action_result.split('\n').pop();
                 appendLog(`${toolName}: ${result}`);
             } catch(e) {
                 appendLog('❌ ' + e.message);
